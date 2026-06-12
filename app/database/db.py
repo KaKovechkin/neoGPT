@@ -32,3 +32,11 @@ async def mark_deleted(message_id , chat_id):
             UPDATE messages SET is_deleted = 1 WHERE chat_id = ? AND message_id = ?
                          '''  , (chat_id , message_id))
         await db.commit()
+        
+        
+async def message_update(text , chat_id , message_id):
+    async with aiosqlite.connect('messages.db') as db:
+        await db.execute('''
+           UPDATE messages SET text  = ? WHERE chat_id = ?  AND message_id = ?      
+                         ''' , (text , chat_id , message_id ))
+        await db.commit()
