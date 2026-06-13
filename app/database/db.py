@@ -11,18 +11,20 @@ async def init_db():
     from_user_id INTEGER , 
     text TEXT , 
     date  INTEGER, 
-    is_deleted INTEGER 
+    is_deleted INTEGER , 
+    first_name TEXT, 
+    username TEXT
     )""")
         await db.commit()
         
 
-async def save_message(chat_id ,business_connection_id, message_id, from_user_id, text, date ):
+async def save_message(chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username):
     async with aiosqlite.connect('messages.db') as db:
         await db.execute(''' 
-            INSERT INTO messages (chat_id, business_connection_id, message_id, from_user_id, text, date)
-            VALUES(?, ?, ?, ?, ? , ?)             
+            INSERT INTO messages (chat_id, business_connection_id, message_id, from_user_id, text, date, first_name, username)
+            VALUES(?, ?, ?, ?, ? , ?, ?, ?)             
                          
-                         ''' , (chat_id ,business_connection_id, message_id, from_user_id, text, date ))
+                         ''' , (chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username))
         await db.commit()
         
         
@@ -40,3 +42,14 @@ async def message_update(text , chat_id , message_id):
            UPDATE messages SET text  = ? WHERE chat_id = ?  AND message_id = ?      
                          ''' , (text , chat_id , message_id ))
         await db.commit()
+        
+        
+async def get_message(chat_id, message_id):
+    async with aiosqlite.connect('messages.db') as db:
+        cursor =  await db.execute('''
+            SELECT text , username FROM messages WHERE chat_id = ? AND message_id = ?
+                         ''' , (chat_id , message_id))
+        row = await cursor.fetchone()
+        return row
+            
+                      
