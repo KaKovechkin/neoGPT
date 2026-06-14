@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart, Command
 from app.handlers.business import router
-from app.database.db import init_db
+from app.database.db import init_db, close_db
 #import redis.asyncio as aioredis
 #from aiogram.fsm.storage.redis import RedisStorage
 
@@ -27,6 +27,7 @@ async def startup(dispatcher:Dispatcher):
     
 
 async def shutdown(dispatcher:Dispatcher):
+    await close_db()
     print('Бот завершил работу.')
 
     
