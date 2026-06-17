@@ -12,6 +12,8 @@ async def init_db():
     chat_id INTEGER  ,
     business_connection_id TEXT , 
     message_id  INTEGER ,
+    file_id TEXT,
+    type_message TEXT,
     from_user_id INTEGER , 
     text TEXT , 
     date  INTEGER, 
@@ -33,12 +35,12 @@ async def close_db():
     await db_connection.close()
         
 
-async def save_message(chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username):
+async def save_message(chat_id, business_connection_id, message_id, file_id, type_message, from_user_id, text, date, first_name, username):
         await db_connection.execute(''' 
-            INSERT INTO messages (chat_id, business_connection_id, message_id, from_user_id, text, date, first_name, username, is_deleted)
-            VALUES(?, ?, ?, ?, ? , ?, ?, ?,?)             
+            INSERT INTO messages (chat_id, business_connection_id, message_id, file_id, type_message, from_user_id, text, date, first_name, username, is_deleted)
+            VALUES(?, ?, ?, ?, ? , ?, ?, ?,?,?,?)             
                          
-                         ''' , (chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username, 0))
+                         ''' , (chat_id, business_connection_id, message_id, file_id, type_message, from_user_id, text, date, first_name, username, 0))
         await db_connection.commit()
         
         
@@ -58,7 +60,7 @@ async def message_update(text , chat_id , message_id, is_edited):
         
 async def get_message(chat_id, message_id):
         cursor =  await db_connection.execute('''
-            SELECT text , username FROM messages WHERE chat_id = ? AND message_id = ?
+            SELECT text , username, file_id, type_message FROM messages WHERE chat_id = ? AND message_id = ?
                          ''' , (chat_id , message_id))
         row = await cursor.fetchone()
         return row
@@ -90,7 +92,7 @@ async def get_connection(owner_id):
 
 async def get_update_message(business_connection_id,from_user_id):
     cursor = await db_connection.execute('''
-            SELECT text , is_edited , is_deleted, date FROM messages WHERE business_connection_id = ? AND from_user_id = ? AND (is_edited = 1 OR is_deleted = 1)                        
+            SELECT text , is_edited , is_deleted, date, file_id, type_message FROM messages WHERE business_connection_id = ? AND from_user_id = ? AND (is_edited = 1 OR is_deleted = 1)                        
                                          ''' , (business_connection_id, from_user_id))
     row = await cursor.fetchall()
     return row
