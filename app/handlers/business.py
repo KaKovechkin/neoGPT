@@ -35,7 +35,7 @@ async def handle_business_message_update(message:Message , bot:Bot):
         await bot.send_message(text = 'сообщение не найдено в базе' , chat_id= owner_id)  # сообщение не найдено в базе
     else:
         await bot.send_message(chat_id=owner_id , text=f'Пользователь @{old_message[1] or "Без username"} изменил(а) сообщение с текстом: {old_message[0]}')
-    await message_update(message.text , chat_id= message.chat.id , message_id= message.message_id)
+    await message_update(message.text , chat_id= message.chat.id , message_id= message.message_id, is_edited=1)
     
     
 @router.deleted_business_messages()

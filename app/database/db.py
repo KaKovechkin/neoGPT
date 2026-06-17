@@ -17,7 +17,8 @@ async def init_db():
     date  INTEGER, 
     is_deleted INTEGER , 
     first_name TEXT, 
-    username TEXT
+    username TEXT,
+    is_edited INTEGER DEFAULT 0
     )""")
     await db_connection.execute("""CREATE TABLE IF NOT EXISTS connections (
         owner_id TEXT,
@@ -34,10 +35,10 @@ async def close_db():
 
 async def save_message(chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username):
         await db_connection.execute(''' 
-            INSERT INTO messages (chat_id, business_connection_id, message_id, from_user_id, text, date, first_name, username)
-            VALUES(?, ?, ?, ?, ? , ?, ?, ?)             
+            INSERT INTO messages (chat_id, business_connection_id, message_id, from_user_id, text, date, first_name, username, is_deleted)
+            VALUES(?, ?, ?, ?, ? , ?, ?, ?,?)             
                          
-                         ''' , (chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username))
+                         ''' , (chat_id ,business_connection_id, message_id, from_user_id, text, date, first_name, username, 0))
         await db_connection.commit()
         
         
@@ -48,10 +49,10 @@ async def mark_deleted(message_id , chat_id):
         await db_connection.commit()
         
         
-async def message_update(text , chat_id , message_id):
+async def message_update(text , chat_id , message_id, is_edited):
         await db_connection.execute('''
-           UPDATE messages SET text  = ? WHERE chat_id = ?  AND message_id = ?      
-                         ''' , (text , chat_id , message_id ))
+           UPDATE messages SET text  = ?, is_edited = ?  WHERE chat_id = ?  AND message_id = ?      
+                         ''' , (text, is_edited, chat_id , message_id))
         await db_connection.commit()
         
         
@@ -60,6 +61,14 @@ async def get_message(chat_id, message_id):
             SELECT text , username FROM messages WHERE chat_id = ? AND message_id = ?
                          ''' , (chat_id , message_id))
         row = await cursor.fetchone()
+        return row
+    
+    
+async def get_list_usernames(business_connection_id):
+        cursor =  await db_connection.execute('''
+            SELECT DISTINCT username, from_user_id,first_name FROM messages WHERE  business_connection_id = ?
+                         ''' , (business_connection_id,))
+        row = await cursor.fetchall()
         return row
             
                      
@@ -77,3 +86,11 @@ async def get_connection(owner_id):
                                 ''' , (owner_id,))
     row = await cursor.fetchone()
     return row 
+
+
+async def get_update_message(business_connection_id,from_user_id):
+    cursor = await db_connection.execute('''
+            SELECT text , is_edited , is_deleted, date FROM messages WHERE business_connection_id = ? AND from_user_id = ? AND (is_edited = 1 OR is_deleted = 1)                        
+                                         ''' , (business_connection_id, from_user_id))
+    row = await cursor.fetchall()
+    return row
